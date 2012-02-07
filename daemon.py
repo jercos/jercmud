@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS globalevents (id INTEGER PRIMARY KEY, type, text);
 CREATE TABLE IF NOT EXISTS roomevents (id INTEGER PRIMARY KEY, type, text);
 CREATE TABLE IF NOT EXISTS rooms (id INTEGER PRIMARY KEY, name, description);
 CREATE TABLE IF NOT EXISTS exits (id INTEGER PRIMARY KEY, src, dest, name, description);
+CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name, pass);
 COMMIT;
 """)
 )(conn.cursor())
