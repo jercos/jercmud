@@ -2,9 +2,9 @@
 from __future__ import print_function
 import sqlite3
 import readline
-import signal
 import sys
 import time
+import threading
 from getpass import getpass
 from hashlib import sha256
 conn = sqlite3.connect('mud-testing.db')
@@ -16,24 +16,32 @@ pollrate = 2
 
 
 PROMPT = '> '
+class StoppableThread(threading.Thread):
+	def __init__(self,target):
+		super(StoppableThread, self).__init__(target=target)
+		self._stop = threading.Event()
+	def stop(self):
+		self._stop.set()
+	def stopped(self):
+		return self._stop.isSet()
 
-def process(sig,stack):
-	global globalid
-	if sig != signal.SIGALRM:
-		print("Something's up. Expected signal",signal.SIGALRM,"but got",sig)
-		raise
-	c = conn.cursor()
+def process():
+  global globalid
+  procconn = sqlite3.connect('mud-testing.db')
+  while True:
+	time.sleep(pollrate)
+	if poller.stopped():
+		return
+	c = procconn.cursor()
 	c.execute("SELECT id,type,text,strftime('%s',time) FROM globalevents WHERE id > ?",(globalid,))
 	result = c.fetchone()
 	if result == None:
-		signal.alarm(pollrate)
-		return
+		continue
 	print()
 	while result != None:
 		globalid = result[0]
 		print("[%s] Event type '%s': '%s'"%(time.ctime(float(result[3])),result[1],result[2]))
 		result = c.fetchone()
-	signal.alarm(pollrate)
 	print(PROMPT, readline.get_line_buffer(), sep='', end='')
 	sys.stdout.flush()
 	c.close()
@@ -82,15 +90,20 @@ conn.commit()
 c.close()
 print(player)
 
+poller = StoppableThread(target=process)
+poller.start()
+
 while True:
 	try:
-		signal.alarm(pollrate)
-		signal.signal(signal.SIGALRM,process)
 		x = str(raw_input(PROMPT))
 		print("Got back a value: ",x)
 	except EOFError:
 		print()
 		print("Got end of file. Goodbye!")
+		poller.stop()
+		poller.join(pollrate*2)
+		if poller.isAlive():
+			print('oh no pigeons')
 		sys.exit(0)
 	except KeyboardInterrupt:
 		print()
