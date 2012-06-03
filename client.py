@@ -85,6 +85,12 @@ while player == None:
 		print("If you want to make an account, log in as 'new'")
 		continue
 	player = dict(zip(("id","name","pass"),result))
+	c.execute("select MAX(id) from globalevents")
+result = c.fetchone()
+if result == None:
+	print("Error code 421: I am a potato. There is no maximum ID in the global events table? if the daemon isn't started, please start it.")
+else:
+	globalid = result[0]
 globalevent('login',"%s logged in"%player['name'])
 conn.commit()
 c.close()
