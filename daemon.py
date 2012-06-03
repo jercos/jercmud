@@ -1,6 +1,6 @@
 import sqlite3
 import time
-conn = sqlite3.connect('/tmp/mud-testing')
+conn = sqlite3.connect('mud-testing.db')
 
 (lambda c:
 	c.executescript("""

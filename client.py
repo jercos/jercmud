@@ -7,7 +7,7 @@ import sys
 import time
 from getpass import getpass
 from hashlib import sha256
-conn = sqlite3.connect('/tmp/mud-testing')
+conn = sqlite3.connect('mud-testing.db')
 
 globalid = 0
 player = None
